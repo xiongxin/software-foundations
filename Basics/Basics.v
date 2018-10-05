@@ -87,4 +87,20 @@ Inductive nat : Type :=
   | O : nat
   | S : nat -> nat.
 
+Definition pred (n : nat) : nat :=
+  match n with
+  | O => O
+  | S n' => n'
+  end.
+Example test_pred1: ( pred O ) = O.
+Proof. simpl. reflexivity. Qed.
+Example test_pred2: ( pred (S O) ) = O.
+Proof. simpl. reflexivity. Qed.
+Example test_pred3: ( pred (S (S O)) ) = S O.
+Proof. simpl. reflexivity. Qed.
+Example test_pred4: ( pred (S (S (S O))) ) = (S (S O)).
+Proof. simpl. reflexivity. Qed.
+
 End NatPlayground.
+
+Check (S (S (S O))).
