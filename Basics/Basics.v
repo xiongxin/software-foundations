@@ -29,13 +29,14 @@ Inductive bool : Type :=
   | true : bool
   | false : bool.
 
-
+(* !函数 *)
 Definition negb (b: bool) : bool :=
 	match b with
 	| true => false
 	| false => true
 	end.
 
+(* and *)
 Definition andb (b1: bool) (b2: bool) : bool :=
 	match b1 with
 	| true => b2
@@ -48,8 +49,13 @@ Definition orb (b1: bool) (b2: bool) : bool :=
 	| false => b2
 	end.
 
+(* 符号定义 宏定义方法 *)
 Notation "x && y" := (andb x y).
 Notation "x || y" := (orb x y).
+
+Example test_andb_notation:
+  true && true = true .
+Proof. simpl. reflexivity. Qed.
 
 (* Compound Types *)
 Inductive rgb : Type := 
@@ -57,14 +63,16 @@ Inductive rgb : Type :=
   | green : rgb
   | blue : rgb.
 
+
+(* 如果 p 属于集合 rgb, 则 primary p 属于集合 color *)
 Inductive color : Type :=
   | black : color
   | white : color
   | primary : rgb -> color.
 
-Check red.
 
-(* 如果 p 属于集合 rgb, 则 primary p 属于集合 color *)
+Check primary red. (* color 类型 *)
+
 
 Definition monochrome (c : color) : bool := 
   match c with
@@ -97,11 +105,24 @@ Proof. simpl. reflexivity. Qed.
 Example test_isrea4: ( isred (primary blue) ) = false.
 Proof. simpl. reflexivity. Qed.
 
+(* 定义自己的自然数，防止和libraries冲突 *)
 Module NatPlayground.
 
 (*
 1. O 是一个自然数
 2. S 提供一个自然数 n 可以产生下一个自然数，也就是说 n 是一个自然数的话, S n 也是一个自然数
+
+O => 0
+S O => 1
+S (S O) => 2
+S (S (S O)) => 3
+S (S (S (S O))) => 4
+S (S (S (S (S O)))) => 5
+S (S (S (S (S (S O))))) => 6
+S (S (S (S (S (S (S O)))))) => 7
+S (S (S (S (S (S (S (S O))))))) => 8
+S (S (S (S (S (S (S (S (S O)))))))) => 9
+S (S (S (S (S (S (S (S (S (S O))))))))) => 10
 *)
 
 
@@ -109,6 +130,10 @@ Inductive nat : Type :=
   | O : nat
   | S : nat -> nat.
 
+(*
+  O 没有前置
+  S n' 前置为 n'
+*)
 Definition pred (n : nat) : nat :=
   match n with
   | O => O
@@ -128,6 +153,7 @@ End NatPlayground.
 Check (O).
 Check (S (S (S O))).
 
+(* 定义一个自然数减2 *)
 Definition minustwo (n : nat) : nat :=
   match n with
     | O => O
@@ -141,6 +167,7 @@ Check S.
 Check pred.
 Check minustwo.
 
+(* 偶数定义: 递归减2 *)
 Fixpoint evenb (n : nat) : bool :=
   match n with
     | O => true
@@ -172,11 +199,20 @@ Module NatPlayground2.
     end.
   Compute (plus 3 2).
 
+  (* 乘法：
+  3 * 4
+  4 + 2 * 4
+  4 + 4 + 1 * 4
+  4 + 4 + 4 + 0 * 4
+  = 12
+  *)
   Fixpoint mult (n m : nat) :=
     match n with
       | O => O
       | S n' => plus m ( mult n' m )
     end.
+
+  Compute (mult 3 4).
 
   Fixpoint minus (n m : nat) :=
     match n, m with
@@ -196,6 +232,12 @@ Fixpoint exp (base power : nat) : nat :=
       | O => S O (* 任意自然数的一次方等于 1 *)
       | S p => mult base (exp base p)
     end.
+
+Example test_exp: (exp 2 2) = 4.
+Proof. simpl. reflexivity. Qed. 
+
+Example test_exp1: (exp 2 3) = 8.
+Proof. simpl. reflexivity. Qed. 
 
 Fixpoint factorial (n : nat) : nat :=
   match n with
@@ -269,8 +311,95 @@ Proof. simpl. reflexivity. Qed.
 Example test_blt_nat3: (blt_nat 4 2) = false.
 Proof. simpl. reflexivity. Qed.
 
+(*Proof by Simplification*)  
+
 Theorem plus_0_n: forall n : nat, O + n = n.
 Proof.
   intros n. simpl. reflexivity. Qed.
+
+Theorem plus_0_n': forall n : nat, 0 + n = n.
+Proof.
+  intros n. reflexivity. 
+Qed.
+
+Theorem plus_id_example: forall n m : nat,
+  n = m ->
+  n + n = m + m.
+Proof.
+  intros n m.
+  intros H.
+  rewrite <- H.
+  reflexivity.
+Qed.
+
+Theorem plus_id_exercise: forall n m o : nat,
+  n = m -> m = o -> n + m = m + o .
+Proof.
+  intros n.
+  intros m.
+  intros o.
+  intros H.
+  intros I.
+  rewrite -> H.
+  rewrite -> I.
+  simpl.
+  reflexivity.
+Qed.
+
+Theorem mult_0_plus: forall n m : nat,
+  (0 + n) * m = n * m.
+Proof.
+  intros n m.
+  rewrite -> plus_0_n.
+  reflexivity.
+Qed.
+
+
+Theorem mult_S_1: forall n m: nat,
+  m = S n -> 
+  m * ( 1 + n) = m * m.
+Proof.
+  intros n m.
+  intros H.
+  rewrite -> H.
+  simpl.
+  reflexivity.
+Qed.
+
+Theorem plus_1_neq_0_firsttry: forall n : nat,
+  beq_nat (n + 1) 0 = false .
+Proof.
+  intros n. destruct n as [| n'].
+  - simpl. reflexivity.
+  - simpl. reflexivity.
+Qed.
+
+Theorem andb_true_elim2: forall b c : bool,
+  andb b c = true -> c = true .
+Proof.
+  intros [] [].
+  - simpl. reflexivity.
+  - intros H.  rewrite <- H. simpl. reflexivity.
+  - simpl. reflexivity.
+  - intros H.  rewrite <- H. simpl. reflexivity.
+Qed.
+
+Theorem zero_nbeq_plus_1: forall n : nat,
+  beq_nat 0 (n + 1) = false .
+Proof.
+  intros [].
+  - simpl. reflexivity.
+  - simpl. reflexivity.
+Qed.
+
+
+
+
+
+
+
+
+
+
   
   
